@@ -239,7 +239,7 @@ class MCTS:
 		self.children = dict()  # children of each node
 		node = copy.deepcopy(self.board)
 		board = copy.deepcopy(self.board)
-		for _ in range(30):
+		for _ in range(1):
 			self.do_rollout(node)
 		for c in self.children:
 			print("visits", self.N[c], self.Q[c], (self.Q[c] / self.N[c]))

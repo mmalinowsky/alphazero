@@ -1,4 +1,5 @@
 *.html
+!dlchess/web/templates/**/*.html
 *.pgn
 *.pyc
 models/*
