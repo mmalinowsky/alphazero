@@ -16,9 +16,19 @@ __all__ = [
 ]
 js_data = '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>\
 <script type="text/javascript">\
-   $("document").ready(function(){\
-       $(".square.e1").bind("click", function(event){alert("clicked svg")});\
-   });\
+$("use").click(function(el) { \
+	var a = el['currentTarget']['attributes'][1].nodeValue;\
+	console.log(a);\
+	v = a.split('(')[1];\
+    w = v.split(')')[0];\
+    arr = v.split(',');\
+\
+    x = parseInt(arr[0]);\
+    y = parseInt(arr[1]);\
+    id = Math.floor(x/45) + (Math.floor(y/45) * 8);\
+    console.log(id);\
+\
+});\
 </script>\
 '
 
