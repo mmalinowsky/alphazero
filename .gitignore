@@ -1,0 +1,5 @@
+*.html
+*.pgn
+*.pyc
+models/*
+games/*
