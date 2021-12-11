@@ -5,8 +5,8 @@ import numpy as np
 import tensorflow.python.keras as keras
 
 board = chess.Board()
-#model = keras.models.load_model('models/cnn_7p')
-model = keras.models.load_model('models/cnn_13p')
+#model = keras.models.load_model('models/cnn_13p')
+model = keras.models.load_model('models/cnn_13p_2021')
 #enc = encoder.EncoderPlane(6*2)
 enc = encoder.EncoderPlane(12+1)
 

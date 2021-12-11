@@ -6,9 +6,9 @@ from tensorflow.python.keras.layers import Dense, Input, Activation, Dropout
 from tensorflow.python.keras.layers import Conv2D, Flatten, MaxPooling2D
 from tensorflow.python.keras.layers.convolutional import ZeroPadding2D
 
-#data_filepath = 'games/ficsgamesdb_202001_standard2000_nomovetimes_145127.npy'
-data_filepath = 'games/adams_13planes.npy'
-model_filepath = 'models/cnn_13p'
+data_filepath = 'games/ficsgamesdb_202001_standard2000_nomovetimes_145127_new_13planes.npy'
+#data_filepath = 'games/adams_13planes.npy'
+model_filepath = 'models/cnn_13p_2021'
 planes = 6*2+1
 batch_size = 64
 epochs = 40
@@ -52,8 +52,8 @@ else:
 #model.ZeroPadding2D(padding=3, input_shape=(8,8,1))
 	model.add(Conv2D(192, kernel_size=(3,3), padding='same', activation='relu', input_shape=(planes,8,8)))
 	model.add(Dropout(rate=0.2))
-	#model.add(Conv2D(64, kernel_size=(3,3), padding='same', activation='relu'))
-	#model.add(Dropout(rate=0.2))
+	model.add(Conv2D(64, kernel_size=(3,3), padding='same', activation='relu'))
+	model.add(Dropout(rate=0.2))
 	#model.add(Conv2D(48, kernel_size=(3,3), padding='same', activation='relu'))
 	#model.add(Dropout(rate=0.2))
 	model.add(Flatten())

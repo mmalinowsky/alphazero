@@ -57,7 +57,7 @@ class EncoderPlane:
 				index = c*planes_num+p-1
 				encoded_board[index] = self.plane_features(p, board, c)
 		board_color = np.zeros((self.size, self.size), dtype=int)
-		board_color.fill(board.turn * -1)
+		board_color.fill(board.turn)
 		encoded_board[self.planes-1] = board_color
 		#np.append(encoded_board, board_color)
 		return encoded_board
