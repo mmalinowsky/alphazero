@@ -10,9 +10,7 @@
          var player_color = 0;
          var pawn_destination = -1;
 
-         $(".square").click(function(el) { 
-            //class_name = el.className.baseVal;
-            //square_loc = class_name.split(" ")[2];
+         $(".square").click(function(el) {
             square_loc = el["currentTarget"].classList[2];
             pawn_destination = square_loc;
             if (selected_pawn != -1 && pawn_destination != -1) {
@@ -25,7 +23,6 @@
 
          $("use").click(function(el) { 
             var a = el["currentTarget"]["attributes"][1].nodeValue;
-            console.log(a);
             v = a.split("(")[1];
             w = v.split(")")[0];
             arr = v.split(",");
@@ -33,7 +30,6 @@
             x = parseInt(arr[0]);
             y = parseInt(arr[1]);
             id = Math.floor(x/pawn_size) + (Math.floor(y/pawn_size) * 8);
-            //selected_pawn = id;
             href_attr = el["currentTarget"].getAttribute("xlink:href");
             if (href_attr.includes("white")) {
                 x_1 = Math.floor(x/pawn_size);
@@ -60,9 +56,9 @@
     function send_move(move_uci) {
         $.getJSON( "/move/"+move_uci, function( data ) {
             if(data.hasOwnProperty("error")) {
-                $("#result").replaceWith(data['error']);
+                $("#result").text(data['error']);
             } else {
-                $("#result").replaceWith("");
+                $("#result").text("");
                 $( "#board" ).load( "/board_svg", function() {
                     callbacks();
                 });
