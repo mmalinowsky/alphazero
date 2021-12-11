@@ -7,8 +7,6 @@ from threading import Thread
 
 colors = ['Black', 'White']
 
-opponent_color = chess.BLACK
-
 
 __all__ = [
     'get_web_app',
@@ -21,7 +19,8 @@ def get_web_app(opponent, board):
 		static_url_path='', 
         template_folder='web/templates'
 		)
-	opponent.player_color = opponent_color
+
+	#opponent.player_color = opponent_color
 
 	def opponent_move(agent, board):
 		move = agent.move()
@@ -38,7 +37,7 @@ def get_web_app(opponent, board):
 
 	@app.route('/next')
 	def next():
-		if board.turn is opponent_color:
+		if board.turn is opponent.player_color:
 			opponent_move(opponent, board)
 		return jsonify({'done': '1'})
 
@@ -46,7 +45,7 @@ def get_web_app(opponent, board):
 	def move(move_uci):
 		if board.is_game_over():
 			return jsonify({'error': 'Game is Over'})
-		if board.turn is opponent_color:
+		if board.turn is opponent.player_color:
 			#board.push(opponent.move())
 			#thread = Thread(target = opponent_move, args = (opponent, board))
 			#thread.start()
@@ -56,5 +55,6 @@ def get_web_app(opponent, board):
 		if move in board.pseudo_legal_moves:
 			board.push(move)
 			return jsonify({'result': 'Success'})
-		return jsonify({'error': 'Not valid move'})
+		return jsonify({'error': move_uci + ' is not a valid move'})
+
 	return app

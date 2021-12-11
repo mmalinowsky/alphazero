@@ -2,6 +2,8 @@ import random
 import chess
 import copy
 import tensorflow.python.keras as keras
+import tensorflow as tf
+
 import numpy as np
 from .encoder import Encoder, EncoderPlane
 from dlchess.score import evaluate_board
@@ -229,6 +231,7 @@ class MCTS:
 		self.board = board
 		self.model = keras.models.load_model('models/'+model)
 		self.enc = EncoderPlane(12+1)
+	
 
 	def set_color(self, player_color):
 		self.player_color = player_color
@@ -249,9 +252,9 @@ class MCTS:
 		print("chosen", self.N[ret], self.Q[ret])
 		maxval = lambda n : float("-inf") if self.N[n] == 0 else ( float(self.Q[n]) / float(self.N[n]))
 		uct = max(self.children[self.board], key=maxval)
-		print(uct)
-		print(self.N[uct], self.Q[uct])
-		print(self.N[self.board], self.Q[self.board])
+		#print(uct)
+		#print(self.N[uct], self.Q[uct])
+		#print(self.N[self.board], self.Q[self.board])
 		return ret.peek()
 
 	def choose(self, node):
@@ -260,7 +263,6 @@ class MCTS:
 			raise RuntimeError(f"choose called on terminal node {node}")
 
 		if node not in self.children:
-			print("wtf")
 			cpy = copy.deepcopy(self.board)
 			move = random.choice(list(node.legal_moves))
 			cpy.push(move)
@@ -334,6 +336,7 @@ class MCTS:
 		encoded_board = self.enc.encode(node, node.turn)
 		encoded_board = np.array([encoded_board])
 		prediction_matrix = self.model.predict(encoded_board)
+		print(prediction_matrix)
 		legal_moves = self.select_moves(node, prediction_matrix) 
 		#legal_moves = [*node.legal_moves]
 		for i in range(len(legal_moves)):

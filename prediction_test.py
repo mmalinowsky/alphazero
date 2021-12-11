@@ -5,9 +5,10 @@ import numpy as np
 import tensorflow.python.keras as keras
 
 board = chess.Board()
-model = keras.models.load_model('models/cnn_7p')
-enc = encoder.EncoderPlane(6*2)
-
+#model = keras.models.load_model('models/cnn_7p')
+model = keras.models.load_model('models/cnn_13p')
+#enc = encoder.EncoderPlane(6*2)
+enc = encoder.EncoderPlane(12+1)
 
 
 def printPredictions(board, enc, model):
@@ -16,7 +17,7 @@ def printPredictions(board, enc, model):
 	rowMsg = []
 	for c in range(8):
 		for r in range(8):
-			rowMsg.append(str('{:06.2f}'.format(prediction[0][r+c*8]))+" ")
+			rowMsg.append(str('{:06.2f}'.format(prediction[0][r+(c*8)]))+" ")
 		print(rowMsg)
 		rowMsg = []
 
@@ -80,7 +81,7 @@ while(True):
 	moves = [chess.SQUARES[s['id']] for s in squares]
 	for move in legal_moves:
 		if move.to_square in moves:
-			print("GITUWA!!", move)
+			print("Found valid move", move)
 	move_input = input('Enter move:')
 	move = chess.Move.from_uci(move_input)
 	board.push(move)
