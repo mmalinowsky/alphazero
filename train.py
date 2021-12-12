@@ -13,7 +13,7 @@ data_filepath = 'games/ficsgamesdb_202001_standard2000_nomovetimes_145127_new_13
 #data_filepath = 'games/adams_13planes.npy'
 model_filepath = 'models/cnn_13p_2021_cnn'
 planes = 6*2+1
-batch_size = 64
+batch_size = 256
 epochs = 5 
 with open(data_filepath, 'rb') as f:
     X = np.load(f)
@@ -71,10 +71,10 @@ else:
 	model.summary()
 	#model.compile(optimizer="adam", loss="categorical_crossentropy")
 	lr_schedule = keras.optimizers.schedules.ExponentialDecay(
-	initial_learning_rate=1e-3,
+	initial_learning_rate=0.1,
 	decay_steps=10000,
 	decay_rate=0.9)
-	optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
+	optimizer = keras.optimizers.SGD(learning_rate=lr_schedule)
 	model.compile(optimizer=optimizer, loss="categorical_crossentropy")
 	#print("lr", keras.eval(model.optimizer.lr))
 history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs)
