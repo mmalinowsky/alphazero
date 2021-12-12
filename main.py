@@ -12,8 +12,8 @@ Players = {
 	#chess.BLACK: Zero(board, "cnn_13p"),
 	#chess.WHITE: agent.User(board),
 	chess.WHITE: Zero(board, "cnn_13p_2021"),
-	chess.BLACK: Zero(board, "cnn_13p_2021"),
-	#chess.BLACK: MINMAX(board),
+	#chess.BLACK: Zero(board, "cnn_13p_2021"),
+	chess.BLACK: MINMAX(board),
 	#chess.WHITE: Alpha(board, "cnn_13p"),
 	#chess.BLACK: Random(board)
 }

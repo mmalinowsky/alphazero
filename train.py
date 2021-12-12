@@ -11,9 +11,9 @@ from tensorflow.keras.layers import *
 from tensorflow.keras.models import *
 data_filepath = 'games/ficsgamesdb_202001_standard2000_nomovetimes_145127_new_13planes.npy'
 #data_filepath = 'games/adams_13planes.npy'
-model_filepath = 'models/cnn_13p_2021_cnn'
+model_filepath = 'models/cnn_13p_2021'
 planes = 6*2+1
-batch_size = 256
+batch_size = 64
 epochs = 5 
 with open(data_filepath, 'rb') as f:
     X = np.load(f)
