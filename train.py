@@ -11,7 +11,7 @@ from tensorflow.keras.layers import *
 from tensorflow.keras.models import *
 data_filepath = 'games/ficsgamesdb_202001_standard2000_nomovetimes_145127_new_13planes.npy'
 #data_filepath = 'games/adams_13planes.npy'
-model_filepath = 'models/cnn_13p_2021_allblack'
+model_filepath = 'models/cnn_13p_2021_cnn'
 planes = 6*2+1
 batch_size = 64
 epochs = 5 
@@ -53,18 +53,16 @@ if os.path.exists(model_filepath):
 	model = keras.models.load_model(model_filepath)
 else:
 #model.ZeroPadding2D(padding=3, input_shape=(8,8,1))
-	model.add(Conv2D(192, kernel_size=(3,3), padding='same', activation='relu', input_shape=(planes,8,8)))
-	model.add(Dropout(rate=0.2))
-	model.add(Conv2D(64, kernel_size=(3,3), padding='same', activation='relu'))
-	model.add(Dropout(rate=0.2))
-	model.add(Conv2D(48, kernel_size=(3,3), padding='same', activation='relu'))
-	model.add(Dropout(rate=0.2))
+	model.add(Conv2D(192, kernel_size=(5,5), padding='same', activation='relu', input_shape=(planes,8,8)))
+	model.add(Conv2D(192, kernel_size=(3,3), padding='same', activation='relu'))
+	model.add(Conv2D(192, kernel_size=(3,3), padding='same', activation='relu'))
+	model.add(Conv2D(192, kernel_size=(3,3), padding='same', activation='relu'))
 	model.add(Flatten())
-	model.add(Dense(1024, activation='relu'))
-	model.add(Dropout(0.3))
 	model.add(Dense(512, activation='relu'))
-	model.add(Dropout(0.3))
 	model.add(Dense(64, activation='softmax'))
+
+	#model.add(Dense(512, activation='relu'))
+	#model.add(Dense(64, activation='softmax'))
 	#model.add(Dense(64, activation='softmax'))
 	#model.add(Dense(256, activation='sigmoid', input_shape=(64,)))
 	#model.add(Dense(64, activation='sigmoid'))
