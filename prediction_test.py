@@ -3,6 +3,7 @@ import chess.svg
 import dlchess.encoder as encoder
 import numpy as np
 import tensorflow.python.keras as keras
+import heapq
 
 board = chess.Board()
 #model = keras.models.load_model('models/cnn_13p')
@@ -22,8 +23,8 @@ def printPredictions(board, enc, model):
 		rowMsg = []
 
 def getPredictions(player_color, board, enc, model):
-	if player_color == chess.WHITE:
-		return getPredictions_white(board,enc,model)
+	#if player_color == chess.WHITE:
+	#	return getPredictions_white(board,enc,model)
 
 	return getPredictions_black(board,enc,model)
 
@@ -61,6 +62,7 @@ def getPredictions_white(board, enc, model):
 
 while(True):
 	player_turn = board.turn
+	print("player_turn", player_turn)
 	printPredictions(board, enc, model)
 	squares = getPredictions(player_turn, board, enc,model)
 	print(squares)
@@ -71,15 +73,17 @@ while(True):
 	f.write(img)
 	f.close
 	encoded_board = enc.encode(board, board.turn)
+	#print(encoded_board)
+	#print("enc")
 	prediction_board = model.predict(np.array([encoded_board]))
+	print(prediction_board)
 	item = np.random.choice(prediction_board[0], p=prediction_board[0])
 	itemindex = np.where(prediction_board[0]==item)[0][0]
 	legal_moves = board.legal_moves
 	move_square = chess.SQUARES[itemindex]
 	#print(move_square)
-	legal_moves = list(board.legal_moves)
 	moves = [chess.SQUARES[s['id']] for s in squares]
-	for move in legal_moves:
+	for move in list(board.legal_moves):
 		if move.to_square in moves:
 			print("Found valid move", move)
 	move_input = input('Enter move:')

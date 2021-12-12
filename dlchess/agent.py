@@ -103,37 +103,76 @@ class Zero:
 	model = 0
 	model_name = ""
 
-	def __init__(self, board, model_name):
+	def __init__(self, board, model_name, apply_beam=True):
 		self.board = board
 		self.model = keras.models.load_model('models/'+model_name)
 		self.model_name = model_name
 		self.enc = EncoderPlane(12+1)
-		
+		self.apply_beam = apply_beam
+
 	def set_color(self, player_color):
 		self.player_color = player_color
 
 	def indexToUci(self, index):
 		return chess.SQUARE_NAMES[index]
 
-	def select_moves(self, prediction_board):
-		print("["+self.model_name+"]max val=" + str(max(prediction_board[0])))
-		remaining_moves = 3
-		sample_moves = set()
-		legal_moves = self.board.legal_moves
+	def getPredictions(self, player_color, board,):
+		#if player_color == chess.WHITE:
+		#	return self.getPredictions_white(board)
 
-		while remaining_moves > 0:
-			item = np.random.choice(prediction_board[0], p=prediction_board[0])
-			itemindex = np.where(prediction_board[0]==item)[0][0]
-			move_square = chess.SQUARES[itemindex]
-			sample_moves.add(move_square)
-			remaining_moves -=1
+		return self.getPredictions_black(board)
+
+	def getPredictions_black(self, board):
+		encoded_board = self.enc.encode(board, board.turn)
+		prediction = self.model.predict(np.array([encoded_board]))
+		squares = []
+		for c in range(8):
+			for r in range(8):
+				square_name = chess.SQUARE_NAMES[r+c*8]
+				square = chess.parse_square(square_name)
+				square_obj = {'name': square_name, 'id': square, 'pred_value':prediction[0][r+c*8]}
+				squares.append(square_obj)
+		return self.select_best_squares(squares)
+
+	def getPredictions_white(self, board):
+		encoded_board = self.enc.encode(board, board.turn)
+		prediction = self.model.predict(np.array([encoded_board]))
+		squares = []
+		x = 0
+		y = 0
+		for c in range(7, 0, -1):
+			x = 0
+			for r in range(7, 0, -1):
+				square_name = chess.SQUARE_NAMES[8-x+y*8]
+				square = chess.parse_square(square_name)
+				square_obj = {'name': square_name, 'id': square, 'pred_value':prediction[0][r+c*8]}
+				squares.append(square_obj)
+				x = x + 1
+			y = y + 1
+		return self.select_best_squares(squares)
+
+	def select_best_squares(self, squares):
+		ret = []
+		heap_arr = [s['pred_value'] for s in squares]
+		heapq.heapify(heap_arr)
+		largest = heapq.nlargest(3, heap_arr)
+		for i in largest:
+			for s in squares:
+				if s['pred_value'] == i:
+					ret.append(s)
+		return ret
+
+	def select_moves(self, prediction_board):
+		#print("["+self.model_name+"]max val=" + str(max(prediction_board[0])))
+		squares = self.getPredictions(self.board.turn, self.board)
+		moves_predicted = [chess.SQUARES[s['id']] for s in squares]
+		#print(moves_predicted)
+		print(self.board.turn)
 		moves = []
-		for move in legal_moves:
-			#print(str(move.to_square) + " " + str(move_square))
-			if move.to_square in sample_moves:
+		print(moves_predicted)
+		for move in list(self.board.legal_moves):
+			if move.to_square in moves_predicted:
 				moves.append(move)
-		#print(moves)
-		#print(self.indexToUci(itemindex))
 		return moves
 
 	def move(self):
@@ -146,12 +185,14 @@ class Zero:
 		moves = self.select_moves(prediction_matrix)
 		print (moves)
 		if not moves:
+			print("No moves")
+			input("Press to continue ")
 			moves = self.board.legal_moves
-		#return moves[0]
-		#return None
 		board = copy.deepcopy(self.board)
-		[move, score] = self.best_move(board, 0, moves)
-		#print('MCTS SCORE' + str(score))
+		move = moves[0]
+		if self.apply_beam:
+			[move, score] = self.best_move(board, 0, moves)
+			print("Zero:", score)
 		return move
 
 	def beam(self, board, moves, amount):
@@ -174,12 +215,12 @@ class Zero:
 
 	def best_move(self, board, depth, legal_moves):
 
-		if depth > 5:
+		if depth > 6:
 			return [board.peek(), evaluate_board(board, self.player_color)]
 		if board.is_stalemate():
 			return [board.peek(), 0]
 		if board.is_checkmate():
-			if board.turn:
+			if board.turn != self.player_color:
 				return [board.peek(), -9999]
 			else:
 				return [board.peek(), 9999]
@@ -210,14 +251,10 @@ class Zero:
 
 		return [move, best_score]
 
-"""
-A minimal implementation of Monte Carlo tree search (MCTS) in Python 3
-Luke Harold Miles, July 2019, Public Domain Dedication
-See also https://en.wikipedia.org/wiki/Monte_Carlo_tree_search
-https://gist.github.com/qpwo/c538c6f73727e254fdc7fab81024f6e1
-"""
+
 from collections import defaultdict
 import math
+import heapq
 
 
 class MCTS:
@@ -231,7 +268,6 @@ class MCTS:
 		self.board = board
 		self.model = keras.models.load_model('models/'+model)
 		self.enc = EncoderPlane(12+1)
-	
 
 	def set_color(self, player_color):
 		self.player_color = player_color
@@ -242,7 +278,7 @@ class MCTS:
 		self.children = dict()  # children of each node
 		node = copy.deepcopy(self.board)
 		board = copy.deepcopy(self.board)
-		for _ in range(1):
+		for _ in range(5):
 			self.do_rollout(node)
 		for c in self.children:
 			print("visits", self.N[c], self.Q[c], (self.Q[c] / self.N[c]))
@@ -304,39 +340,85 @@ class MCTS:
 				path.append(n)
 				return path
 			node = self._uct_select(node)  # descend a layer deeper
-	
+
+	def getPredictions(self, player_color, board,):
+		#if player_color == chess.WHITE:
+		#	return self.getPredictions_white(board)
+
+		return self.getPredictions_black(board)
+
+	def getPredictions_black(self, board):
+		encoded_board = self.enc.encode(board, board.turn)
+		prediction = self.model.predict(np.array([encoded_board]))
+		squares = []
+		for c in range(8):
+			for r in range(8):
+				square_name = chess.SQUARE_NAMES[r+c*8]
+				square = chess.parse_square(square_name)
+				square_obj = {'name': square_name, 'id': square, 'pred_value':prediction[0][r+c*8]}
+				squares.append(square_obj)
+		return self.select_best_squares(squares)
+
+	def getPredictions_white(self, board):
+		encoded_board = self.enc.encode(board, board.turn)
+		prediction = self.model.predict(np.array([encoded_board]))
+		squares = []
+		x = 0
+		y = 0
+		for c in range(7, 0, -1):
+			x = 0
+			for r in range(7, 0, -1):
+				square_name = chess.SQUARE_NAMES[8-x+y*8]
+				square = chess.parse_square(square_name)
+				square_obj = {'name': square_name, 'id': square, 'pred_value':prediction[0][r+c*8]}
+				squares.append(square_obj)
+				x = x + 1
+			y = y + 1
+		return self.select_best_squares(squares)
+
+	def select_best_squares(self, squares):
+		ret = []
+		heap_arr = [s['pred_value'] for s in squares]
+		heapq.heapify(heap_arr)
+		largest = heapq.nlargest(3, heap_arr)
+		for i in largest:
+			for s in squares:
+				if s['pred_value'] == i:
+					ret.append(s)
+		return ret
+
 	def select_moves(self, board, prediction_board):
 		#print("["+self.model_name+"]max val=" + str(max(prediction_board[0])))
-		remaining_moves = 3
-		sample_moves = set()
-		while remaining_moves > 0:
-			item = np.random.choice(prediction_board[0], p=prediction_board[0])
-			itemindex = np.where(prediction_board[0]==item)[0][0]
-			#legal_moves = self.board.legal_moves
-			move_square = chess.SQUARES[itemindex]
-			sample_moves.add(move_square)
-			remaining_moves -=1
+		squares = self.getPredictions(board.turn, board)
+		moves_predicted = [chess.SQUARES[s['id']] for s in squares]
+		#print(moves_predicted)
+		#print(board.turn)
 		moves = []
-		for move in board.pseudo_legal_moves:
-			#print(str(move.to_square) + " " + str(move_square))
-			if move.to_square in sample_moves:
+		for move in list(board.legal_moves):
+			if move.to_square in moves_predicted:
 				moves.append(move)
-		#print(moves)
-		#print(self.indexToUci(itemindex))
-		#moves = self.beam(board, moves, 8)
-		#print(moves)
 		if len(moves) < 1:
+			print("NO VALID MOVES FOUND")
+			#print(board.turn)
+			#img = chess.svg.board(board)
+			#f = open('debug.html', 'w')
+			#f.write(img)
+			#f.close
+			#input("A")
 			return [*board.legal_moves]
 		return moves
+
 	def _expand(self, node):
 		"Update the `children` dict with the children of `node`"
 		if node in self.children:
+			print("already expanded")
 			return  # already expanded
 		nodes = []
 		encoded_board = self.enc.encode(node, node.turn)
 		encoded_board = np.array([encoded_board])
 		prediction_matrix = self.model.predict(encoded_board)
-		print(prediction_matrix)
+		#print(prediction_matrix)
+		#print(node.turn)
 		legal_moves = self.select_moves(node, prediction_matrix) 
 		#legal_moves = [*node.legal_moves]
 		for i in range(len(legal_moves)):

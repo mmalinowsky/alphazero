@@ -3,9 +3,9 @@ import chess
 def evaluate_board(board, player_color):
 	if board.is_game_over():
 		if board.result() == "1-0":
-			return 9999 if player_color == 0 else -9999
+			return 9999 if player_color == 1 else -9999
 		elif board.result() == "0-1":
-			return -9999 if player_color == 0 else 9999
+			return -9999 if player_color == 1 else 9999
 		else:
 			return 0
 

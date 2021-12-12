@@ -9,7 +9,8 @@ from dlchess.alpha import Alpha
 def main():
 
 	board = MyBoard()
-	bot = MCTS(board, "cnn_13p")
+	bot = Zero(board, "cnn_13p_2021")
+	#bot = MCTS(board, "cnn_13p")
 	opponent_color = chess.BLACK
 	bot.set_color(opponent_color)
 	web_app = serve.get_web_app(bot, board)

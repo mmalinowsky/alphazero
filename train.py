@@ -1,17 +1,20 @@
 import os.path
 import numpy as np
-import tensorflow.python.keras as keras
-from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers import Dense, Input, Activation, Dropout
-from tensorflow.python.keras.layers import Conv2D, Flatten, MaxPooling2D
-from tensorflow.python.keras.layers.convolutional import ZeroPadding2D
-
+#import tensorflow.python.keras as keras
+#from tensorflow.python.keras.models import Sequential
+#from tensorflow.python.keras.layers import Dense, Input, Activation, Dropout
+#from tensorflow.python.keras.layers import Conv2D, Flatten, MaxPooling2D
+#from tensorflow.python.keras.layers.convolutional import ZeroPadding2D
+from tensorflow import keras
+import tensorflow as tf
+from tensorflow.keras.layers import *
+from tensorflow.keras.models import *
 data_filepath = 'games/ficsgamesdb_202001_standard2000_nomovetimes_145127_new_13planes.npy'
 #data_filepath = 'games/adams_13planes.npy'
-model_filepath = 'models/cnn_13p_2021'
+model_filepath = 'models/cnn_13p_2021_allblack'
 planes = 6*2+1
 batch_size = 64
-epochs = 40
+epochs = 5 
 with open(data_filepath, 'rb') as f:
     X = np.load(f)
     Y = np.load(f)
@@ -54,9 +57,11 @@ else:
 	model.add(Dropout(rate=0.2))
 	model.add(Conv2D(64, kernel_size=(3,3), padding='same', activation='relu'))
 	model.add(Dropout(rate=0.2))
-	#model.add(Conv2D(48, kernel_size=(3,3), padding='same', activation='relu'))
-	#model.add(Dropout(rate=0.2))
+	model.add(Conv2D(48, kernel_size=(3,3), padding='same', activation='relu'))
+	model.add(Dropout(rate=0.2))
 	model.add(Flatten())
+	model.add(Dense(1024, activation='relu'))
+	model.add(Dropout(0.3))
 	model.add(Dense(512, activation='relu'))
 	model.add(Dropout(0.3))
 	model.add(Dense(64, activation='softmax'))
@@ -66,22 +71,18 @@ else:
 	#model.add(Activation('softmax'))
 
 	model.summary()
-	model.compile(optimizer="adam", loss="categorical_crossentropy")
-
+	#model.compile(optimizer="adam", loss="categorical_crossentropy")
+	lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+	initial_learning_rate=1e-3,
+	decay_steps=10000,
+	decay_rate=0.9)
+	optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
+	model.compile(optimizer=optimizer, loss="categorical_crossentropy")
+	#print("lr", keras.eval(model.optimizer.lr))
 history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs)
 
 score = model.evaluate(x_test, y_test)
 model.save(model_filepath)
 print(score)
 
-test_board = np.array([x_train[4]])
-print(test_board)
 
-move_prediction = model.predict(test_board)
-
-rowMsg = ""
-for c in range(8):
-	for r in range(8):
-		rowMsg += str(move_prediction[0][r+c*8])+" "
-	print(rowMsg)
-	rowMsg = ""

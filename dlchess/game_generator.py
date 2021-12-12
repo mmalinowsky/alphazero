@@ -12,13 +12,6 @@ class GameGenerator:
 		"1-0" : 0}
 		return color_map[header]
 
-	def printArr(self, arr):
-		rowMsg = []
-		for c in range(8):
-			for r in range(8):
-				rowMsg.append(str(arr[r+(c*8)])+" ")
-			print(rowMsg)
-			rowMsg = []
 
 	def generate(self, filename, planes):
 
@@ -33,6 +26,9 @@ class GameGenerator:
 		while (game is not None):
 			board = game.board()
 			winner_color = self.get_winner_color(game.headers['Result'])
+			#if game.headers['Result'] != game_results[1]:
+				#game = chess.pgn.read_game(pgn)
+				#continue
 			if game.headers['Result'] not in game_results:
 				continue
 
@@ -47,14 +43,9 @@ class GameGenerator:
 				X.append(x)
 				y = enc.move_encode(move)
 				Y.append(y)
-				self.printArr(y)
-				print(board.turn)
-				print(" ")
 				board.push(move)
 
 
-			if games > 1:
-				break
 			#print(np.array(Y))
 			#print(Y.size)
 			#print(Y.shape)
