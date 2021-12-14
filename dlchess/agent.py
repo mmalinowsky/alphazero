@@ -155,7 +155,7 @@ class Zero:
 		ret = []
 		heap_arr = [s['pred_value'] for s in squares]
 		heapq.heapify(heap_arr)
-		largest = heapq.nlargest(3, heap_arr)
+		largest = heapq.nlargest(2, heap_arr)
 		for i in largest:
 			for s in squares:
 				if s['pred_value'] == i:
@@ -169,22 +169,29 @@ class Zero:
 		#print(moves_predicted)
 		#print(board.turn)
 		moves = []
+		moves_probability = []
 		#print(moves_predicted)
 		for move in list(board.legal_moves):
 			if move.to_square in moves_predicted:
 				moves.append(move)
-		return moves
+				for square in squares:
+					if square['id'] == move.to_square:
+						moves_probability.append(square['pred_value'])
+		if not moves:
+			print(squares)
+		return [moves,moves_probability]
 
 	def move(self):
 		encoded_board = self.enc.encode(self.board, self.board.turn)
 		encoded_board = np.array([encoded_board])
 		prediction_matrix = self.model.predict(encoded_board)
-		moves = self.select_moves(self.board, prediction_matrix)
-		print (moves)
-		if not moves:
+		[moves, moves_prob] = self.select_moves(self.board, prediction_matrix)
+		print ("[Move]moves", moves)
+		if len(moves) == 0:
 			print("No moves")
 			input("Press to continue ")
-			moves = self.board.legal_moves
+			moves = [*self.board.legal_moves]
+			print("legal", moves)
 		board = copy.deepcopy(self.board)
 		move = moves[0]
 		if self.apply_beam:
@@ -213,7 +220,7 @@ class Zero:
 		return moves
 
 	def best_move(self, board, depth, legal_moves):
-		if depth > 6:
+		if depth > 4:
 			return [board.peek(), evaluate_board(board, self.player_color)]
 		if board.is_stalemate():
 			return [board.peek(), 0]
@@ -223,20 +230,18 @@ class Zero:
 			else:
 				return [board.peek(), 9999]
 
-		best_score = -9999
+		best_score = evaluate_board(board, self.player_color)
 		#legal_moves = (list(board.legal_moves))
 		#random.shuffle(legal_moves)
 		#moves = self.beam(board, legal_moves, 4)
 		moves = legal_moves
+
 		#print(moves)
-		if depth > 1:
-			moves = moves[0:3]
-		if len([*legal_moves]) > 0:
-			move = random.choice([*legal_moves])
-		elif len(moves) > 0:
+		if len(moves) > 0:
 			move = random.choice(moves)
 		else:
-			move = random.choice([*board.legal_moves])
+			return [board.peek(), -9999]
+			#move = random.choice([*board.legal_moves])
 
 		for i in moves:
 			#next_state = copy.deepcopy(board)
@@ -248,7 +253,7 @@ class Zero:
 			encoded_board = self.enc.encode(board, board.turn)
 			encoded_board = np.array([encoded_board])
 			pred_matrix = self.model.predict(encoded_board)
-			predicted_moves = self.select_moves(board, pred_matrix)
+			[predicted_moves, moves_prob]  = self.select_moves(board, pred_matrix)
 			[new_move, opponent_max_value] = self.best_move(board, depth+1, predicted_moves)
 			board.pop()
 			our_score = -1 * opponent_max_value
