@@ -5,14 +5,14 @@ import tensorflow.python.keras as keras
 import tensorflow as tf
 
 import numpy as np
-from .encoder import Encoder, EncoderPlane
+from .encoder import EncoderPlane
 from dlchess.score import evaluate_board
 import time
 
 class Random:
 	board = 0
 	
-	def __init__(self, board):
+	def __init__(self, board, *argv):
 		self.board = board
 	
 	def set_color(self, player_color):
@@ -33,7 +33,7 @@ class MINMAX:
 	def set_color(self, player_color):
 		self.player_color = player_color
 
-	def __init__(self, board):
+	def __init__(self, board, *argv):
 		self.board = board
 
 	def move(self):
@@ -87,7 +87,7 @@ class MINMAX:
 
 class User:
 	board = 0
-	def __init__(self, board):
+	def __init__(self, board, *argv):
 		self.board = board
 
 	def move(self):
@@ -101,7 +101,7 @@ class User:
 class Zero:
 	board = 0
 	states = {}
-	enc = Encoder()
+	enc = EncoderPlane(12+1)
 	model = 0
 	model_name = ""
 
