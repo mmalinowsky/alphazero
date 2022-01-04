@@ -2,34 +2,6 @@ import numpy as np
 import chess
 import math
 
-class Encoder:
-	
-	def __init__(self):
-		self.size = 8
-		self.planes = 1
-	def encode(self, board, player_color):
-		encoded_board = np.zeros((self.size,self.size), dtype=int)
-		enemy_color = chess.BLACK if player_color == chess.WHITE else chess.WHITE
-		pawn_types = [chess.PAWN, chess.KNIGHT, chess.BISHOP, chess.ROOK, chess.QUEEN, chess.KING]
-
-		pieces = board.piece_map()
-		for pos in pieces:
-			y = math.floor(pos / self.size)
-			x = pos - (y * self.size)
-			if pieces[pos].color == player_color:
-				encoded_board[y][x] = 1
-			else:
-				encoded_board[y][x] = -1
-		return encoded_board
-
-	def move_encode(self, move):
-		encoded_board = np.zeros((self.size * self.size), dtype=int)
-		sq = move.to_square
-		encoded_board[sq] = 1
-		#encoded_board = np.reshape(encoded_board, (self.size, self.size))
-		return encoded_board
-
-
 
 class EncoderPlane:
 	

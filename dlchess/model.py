@@ -1,70 +1,46 @@
-import numpy as np
-import tensorflow.python.keras as keras
-
-from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers import Dense, Input, Activation
-from tensorflow.python.keras.layers import Conv2D, Flatten, MaxPooling2D
-import generate_games
+import tensorflow as tf
 
 
+class AC_model(tf.keras.Model):
+	def __init__(self):
+		super().__init__()
+		self.input1 = tf.keras.layers.Conv2D(192, kernel_size=(5, 5), padding='same', activation='relu')
+		self.dropout1 = tf.keras.layers.Dropout(rate=0.6)
+		self.innerConv = []
+		for i in range(2,8):
+			self.innerConv.append(tf.keras.layers.Conv2D(192, kernel_size=(3, 3), padding='same', activation='relu'))
+			#self.innerConv.append(tf.keras.layers.Dropout(rate=0.6))
+		self.conv2 = tf.keras.layers.Conv2D(32, kernel_size=(1, 1), padding='same', activation='relu')
+		self.flatten = tf.keras.layers.Flatten()
+		self.dense1 = tf.keras.layers.Dense(512, activation='relu')
+		self.dropout2 = tf.keras.layers.Dropout(rate=0.6)
+		self.actor = tf.keras.layers.Dense(64, activation='softmax')
+		self.critic_in1 = tf.keras.layers.Conv2D(32, kernel_size=(3, 3), padding='same', activation='relu')
+		self.flatten2 = tf.keras.layers.Flatten()
+		self.dense2 = tf.keras.layers.Dense(512, activation='relu')
+		self.critic = tf.keras.layers.Dense(1, activation='linear')
 
-#game_generator = generate_games.GameGenerator()
-#[X, Y] = game_generator.generate()
 
-with open('games.npy', 'rb') as f:
-    X = np.load(f)
-    Y = np.load(f)
-samples = X.shape[0]
+	def call(self, inputs, training=False):
+		training = False
+		x = self.input1(inputs)
+		if training:
+			x = self.dropout1(x, training=training)
+		for i in range(len(self.innerConv)):
+			x = self.innerConv[i](x)
+			if training:
+				x = self.innerConv[i+1](x, training=training)
+		x = self.conv2(x)
+		x_actor = self.flatten(x)
+		if training:
+			x_actor = self.dropout2(x_actor, training=training)
+		x_actor = self.dense1(x_actor)
 
-train_samples = int(samples * 0.9)
-x_train = X[:train_samples]
-y_train = Y[:train_samples]
+		actor_value = self.actor(x_actor)
 
+		x = self.critic_in1(x)
+		x = self.flatten2(x)
+		x = self.dense2(x)
+		critic_value = self.critic(x)
 
-x_test = X[train_samples:]
-y_test = Y[train_samples:]
-
-x_train = x_train.reshape(train_samples, 64)
-y_train = y_train.reshape(train_samples, 64)
-
-x_test = x_test.reshape(samples-train_samples, 64)
-y_test = y_test.reshape(samples-train_samples, 64)
-#y_train = np.array([y_train])
-np.random.seed(123)
-#x_train = np.array([x_train])
-#inputs = Input(shape=(8,8))
-#y_train = np.array([y_train])
-#x = Conv2D(filters=32, kernel_size=(3, 3), activation="relu")(inputs)
-#x = MaxPooling2D(pool_size=(3, 3))(x)
-#x = Conv2D(filters=32, kernel_size=(3, 3), activation="relu")(x)
-#x = MaxPooling2D(pool_size=(3, 3))(x)
-#x = Flatten()(inputs)
-#x = Dense(128, activation="relu")(inputs)
-#outputs = Dense(64, activation="softmax")(x)
-#model = keras.Model(inputs, outputs)
-
-model = keras.Sequential()
-model.add(Dense(256, activation='sigmoid', input_shape=(64,)))
-model.add(Dense(64, activation='sigmoid'))
-model.add(Activation('softmax'))
-
-model.summary()
-model.compile(optimizer="adam", loss="mean_squared_error")
-
-history = model.fit(x_train, y_train, batch_size=32, epochs=10)
-
-score = model.evaluate(x_test, y_test)
-model.save("models/first")
-print(score)
-
-test_board = np.array([x_train[4]])
-print(test_board)
-
-move_prediction = model.predict(test_board)
-
-rowMsg = ""
-for c in range(8):
-	for r in range(8):
-		rowMsg += str(move_prediction[0][r+c*8])+" "
-	print(rowMsg)
-	rowMsg = ""
+		return (actor_value, critic_value)

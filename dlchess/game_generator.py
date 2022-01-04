@@ -13,7 +13,7 @@ class GameGenerator:
 		return color_map[header]
 
 
-	def generate(self, filename, planes):
+	def generate(self, filename, planes, games_count=1000):
 
 		enc = encoder.EncoderPlane(planes)
 		pgn = open(filename+".pgn")
@@ -38,14 +38,13 @@ class GameGenerator:
 					continue
 				moves_by_color[board.turn] = moves_by_color[board.turn] + 1
 				x = enc.encode(board, board.turn)
-				#print(x)
-				#print("New Move")
 				X.append(x)
 				y = enc.move_encode(move)
 				Y.append(y)
 				board.push(move)
 
-
+			if games > games_count:
+				break
 			#print(np.array(Y))
 			#print(Y.size)
 			#print(Y.shape)
